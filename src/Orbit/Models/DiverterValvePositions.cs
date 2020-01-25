@@ -4,6 +4,6 @@
     {
         Reprocess,
         ToStorage,
-        Accept,
+        Accept
     }
 }

@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Orbit.Models
 {
-    public class Atmosphere : IAlertableModel
+    public class AtmosphereData : IAlertableModel
     {
         #region Limits
         //values in decibels
@@ -346,7 +346,7 @@ namespace Orbit.Models
 
         #region Equality Members
 
-        public bool Equals(Atmosphere other)
+        public bool Equals(AtmosphereData other)
         {
             if (ReferenceEquals(null, other))
                 return false;
@@ -372,7 +372,7 @@ namespace Orbit.Models
 
         public override bool Equals(object obj)
         {
-            return ReferenceEquals(this, obj) || obj is Atmosphere other && this.Equals(other);
+            return ReferenceEquals(this, obj) || obj is AtmosphereData other && this.Equals(other);
         }
 
         public override int GetHashCode()
@@ -399,9 +399,9 @@ namespace Orbit.Models
            );
         }
 
-        public static bool operator ==(Atmosphere left, Atmosphere right) => Equals(left, right);
+        public static bool operator ==(AtmosphereData left, AtmosphereData right) => Equals(left, right);
 
-        public static bool operator !=(Atmosphere left, Atmosphere right) => !Equals(left, right);
+        public static bool operator !=(AtmosphereData left, AtmosphereData right) => !Equals(left, right);
 
         #endregion Equality Members
 
