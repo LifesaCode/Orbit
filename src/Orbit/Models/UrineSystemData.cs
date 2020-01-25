@@ -24,6 +24,8 @@ namespace Orbit.Models
         private const int brineTankLevelUpperLimit = 100;
         private const int brineTankLevelTolerance = 5;
 
+        private SystemStatus lastWorkingStatus;
+
         #endregion Limits
 
         #region Properties
@@ -113,52 +115,92 @@ namespace Orbit.Models
             if (SystemStatus == SystemStatus.Standby)
             {
                 // if urine tank is full and the waste and brine tanks are not, change to 'processing' state
-                // and simulate processing
                 if (UrineTankLevel >= urineTankUpperLimit * .8
                     && wasteTankLevel < urineTankUpperLimit
                     && BrineTankLevel < brineTankLevelUpperLimit)
                 {
                     SystemStatus = SystemStatus.Processing;
-                    UrineTankLevel += 5;
-                    SupplyPumpOn = true;
-                    DistillerOn = true;
-                    PurgePumpOn = true;
-                    BrineTankLevel += 2;
                 }
                 // if urine tank not full, stay in standby and simulate urine tank filling
                 else
                 {
-                    UrineTankLevel += 3;
+                    if (SupplyPumpOn || PurgePumpOn || DistillerOn)
+                    {
+                        lastWorkingStatus = SystemStatus;
+                        SystemStatus = SystemStatus.Trouble;
+                    }
+                    else
+                    {
+                        SimulateStandby();
+                    }
                 }
             }
             else if (SystemStatus == SystemStatus.Processing)
             {
-                // no more urine to process, change to 'standby' state
+                // no more urine to process or waste or brine tank full, change to 'Standby' state
                 if (UrineTankLevel <= 0
                     || wasteTankLevel >= urineTankUpperLimit
                     || BrineTankLevel >= brineTankLevelUpperLimit)
                 {
                     SystemStatus = SystemStatus.Standby;
-                    SupplyPumpOn = false;
-                    DistillerOn = false;
-                    PurgePumpOn = false;
 
                     UrineTankLevel = Math.Max(UrineTankLevel, 0);
                     BrineTankLevel = Math.Min(BrineTankLevel, brineTankLevelUpperLimit);
                 }
                 else
                 {
-                    // simulate processing
-                    UrineTankLevel -= 5;
-                    BrineTankLevel += 2;
+                    if(!SupplyPumpOn || !PurgePumpOn || !DistillerOn)
+                    {
+                        lastWorkingStatus = SystemStatus;
+                        SystemStatus = SystemStatus.Trouble;
+                    }
+                    else
+                    {
+                        SimulateProcessing();
+                    }
                 }
+            }
+            else if(SystemStatus == SystemStatus.Trouble)
+            {
+                Trouble();
             }
             else
             {
                 SystemStatus = SystemStatus.Standby;
-                SupplyPumpOn = false;
-                DistillerOn = false;
-                PurgePumpOn = false;
+                SimulateStandby();
+            }
+        }
+
+        private void SimulateProcessing()
+        {
+            UrineTankLevel -= 5;
+            BrineTankLevel += 1;
+            
+            // should be on, randomly trigger a false to simulate a fault
+            SupplyPumpOn = RandomFalse();
+            DistillerOn = RandomFalse();
+            PurgePumpOn = RandomFalse();
+        }
+
+        private void SimulateStandby()
+        {
+            UrineTankLevel += 3;
+
+            // should be off, randomly trigger a true to simulate a fault
+            SupplyPumpOn = RandomTrue();
+            DistillerOn = RandomTrue();
+            PurgePumpOn = RandomTrue();
+        }
+
+        private void Trouble()
+        {
+            if(lastWorkingStatus == SystemStatus.Processing)
+            {
+                SimulateProcessing();
+            }
+            else
+            {
+                SimulateStandby();
             }
         }
 
@@ -173,9 +215,31 @@ namespace Orbit.Models
             }
             else
             {
-                DistillerTemp = 20;  // something close to ambient air temp
+                DistillerTemp = rand.Next(15, 32);  // something close to ambient air temp
                 DistillerSpeed = 0;
             }
+        }
+
+        private bool RandomTrue()
+        {
+            Random rand = new Random();
+
+            if (rand.Next(1, 10) == 3)
+            {
+                return true;
+            }
+            else { return false; }
+        }
+
+        private bool RandomFalse()
+        {
+            Random rand = new Random();
+
+            if (rand.Next(1, 10) == 3)
+            {
+                return false;
+            }
+            else { return true; }
         }
 
         #region Alert Generation

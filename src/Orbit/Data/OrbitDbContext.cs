@@ -48,7 +48,7 @@ namespace Orbit.Data
                 PurgePumpOn = false,
                 SystemStatus = SystemStatus.Standby,
                 UrineTankLevel = 40,
-            }); ;
+            });
 
             this.WasteWaterStorageTankData.Add(new WasteWaterStorageTankData {
                 TankId = "Main",
