@@ -12,10 +12,12 @@ namespace Orbit.Models
         private int seperatorSpeedUpperLimit = 2400;
         private int seperatorSpeedLowerLimit = 1000;
         private int seperatorSpeedTolerance = 100;
+        private int seperatorSpeedStandbyMax = 100;
 
         private int reactorTempUpperLimit = 650;
         private int reactorTempLowerLimit = 450;
         private int reactorTempTolerance = 25;
+        private int reactorTempStandbyMax = 100;
 
         private int storeFull = 100;
         private int storeEmpty = 5;
@@ -25,6 +27,8 @@ namespace Orbit.Models
         private int MethaneFillValue = 5;
         private int Co2FillValue = 3;
         private int H2FillValue = 2;
+
+        private SystemStatus lastStatus;
 
         #endregion Limits
 
@@ -94,14 +98,17 @@ namespace Orbit.Models
 
         public void ProcessData()
         {
+            GenerateData();
+
             if(Status == SystemStatus.Processing)
             {
                 SimulateProcessing();
 
                 // if stores are almost empty, change to standby state
-                if ((H2StoreLevel < storeEmpty) || (Co2StoreLevel < storeEmpty))
+                if ((H2StoreLevel <= storeEmpty) || (Co2StoreLevel <= storeEmpty))
                 {
                     Status = SystemStatus.Standby;
+                    lastStatus = Status;
                     TurnOff();
                 }
             }
@@ -113,8 +120,29 @@ namespace Orbit.Models
                 if ((H2StoreLevel > storeReadyToProcess) && (Co2StoreLevel > storeReadyToProcess))
                 {
                     Status = SystemStatus.Processing;
+                    lastStatus = Status;
                     TurnOn();
                 }
+            }
+            else 
+            {
+                SimulateStandby();
+            }
+        }
+
+        private void GenerateData()
+        {
+            Random rand = new Random();
+
+            if(Status == SystemStatus.Processing)
+            {
+                SeperatorMotorSpeed = rand.Next(SeperatorMotorSetSpeed - seperatorSpeedTolerance, SeperatorMotorSetSpeed + seperatorSpeedTolerance);
+                ReactorTemp = rand.Next(ReactorSetTemp - reactorTempTolerance, ReactorSetTemp + reactorTempTolerance);
+            }
+            else
+            {
+                SeperatorMotorSpeed = rand.Next(0, seperatorSpeedStandbyMax);
+                ReactorTemp = rand.Next(16, reactorTempStandbyMax);
             }
         }
 
@@ -125,7 +153,7 @@ namespace Orbit.Models
                 || (ReactorTemp >= reactorTempUpperLimit)
                 || (!SeperatorOn)
                 || (!PumpOn)
-                || (MethaneStoreLevel > (storeFull - storeTolerance))
+                || (MethaneStoreLevel >= storeFull)
                 || (HeaterOn && (ReactorTemp < reactorTempLowerLimit))
                 || (SeperatorMotorSpeed >= seperatorSpeedUpperLimit)
                 || (SeperatorMotorSpeed <= seperatorSpeedLowerLimit))
@@ -135,13 +163,22 @@ namespace Orbit.Models
 
             // simulate removal of reactant gasses to reaction  
             // TODO: fix subtraction rates to be more in line with reaction consumption ratio
-            if (H2StoreLevel > storeEmpty)
-            {
+            if (H2StoreLevel >= (storeEmpty + H2FillValue))
+            {              
                 H2StoreLevel -= H2FillValue;
             }
-            if (Co2StoreLevel > storeEmpty)
+            else
+            {
+                H2StoreLevel = storeEmpty;
+            }
+            
+            if (Co2StoreLevel >= (storeEmpty + Co2FillValue))
             {
                 Co2StoreLevel -= Co2FillValue;
+            }
+            else
+            {
+                Co2StoreLevel = storeEmpty;
             }
 
             // simulate methane fill and venting
@@ -173,9 +210,17 @@ namespace Orbit.Models
             {
                 H2StoreLevel += H2FillValue;
             }
+            else
+            {
+                H2StoreLevel = storeEmpty;
+            }
             if (Co2StoreLevel < storeFull)
             {
                 Co2StoreLevel += Co2FillValue;
+            }
+            else
+            {
+                Co2StoreLevel = storeEmpty;
             }
         }
 
@@ -212,7 +257,6 @@ namespace Orbit.Models
         }
 
         #endregion Methods
-
 
         #region Check Alerts
 
