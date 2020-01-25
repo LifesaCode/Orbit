@@ -89,6 +89,8 @@ namespace Orbit.Models
 
         public void ProcessData()
         {
+            GenerateData();
+
             if(TempLowCoolantLoop < SetTempLowLoop)
             {
                 // coolant too cool, decrease amount of 'cold' coolant from heat exchanger
@@ -105,21 +107,31 @@ namespace Orbit.Models
             {
                 // if a pump goes off, make sure loops are operating as single loop to maintain cooling ability
                 LoopMixValvePosition = mixValveMaxOpen;
-                Trouble();
+                Status = SystemStatus.Trouble;
             }
 
-            if((TempLowCoolantLoop <= lowTempCoolantLoopLowerLimit) && (HeatExMixValvePosition != mixValveMaxClosed))
+            if ((TempLowCoolantLoop <= lowTempCoolantLoopLowerLimit) && (HeatExMixValvePosition != mixValveMaxClosed))
             {
                 // temp is too low, bypass heat exchanger so line does not freeze
                 HeatExMixValvePosition = mixValveMaxClosed;
             }
-
-
         }
 
-        private void Trouble()
+        private void GenerateData()
         {
-            Status = SystemStatus.Trouble;
+            Random rand = new Random();
+
+            TempLowCoolantLoop = rand.Next(0, 60);
+            TempMedCoolantLoop = rand.Next(0, 60);
+
+            if (rand.Next(0, 10) == 5)
+            {
+                LowTempPumpOn = !LowTempPumpOn;
+            }
+            if (rand.Next(0, 10) == 9)
+            {
+                MedTempPumpOn = !MedTempPumpOn;
+            }
         }
 
         private void IncreaseMix()
@@ -128,6 +140,10 @@ namespace Orbit.Models
             {
                 HeatExMixValvePosition++;
             }
+            else
+            {
+                HeatExMixValvePosition = mixValveMaxOpen;
+            }
         }
 
         private void DecreaseMix()
@@ -135,6 +151,10 @@ namespace Orbit.Models
             if (HeatExMixValvePosition > mixValveMaxClosed)
             {
                 HeatExMixValvePosition--;
+            }
+            else 
+            {
+                HeatExMixValvePosition = 0;
             }
         }
 

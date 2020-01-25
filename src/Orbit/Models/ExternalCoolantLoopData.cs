@@ -17,9 +17,9 @@ namespace Orbit.Models
         private const int fluidPressureLowerLimit = 170;
         private const int fluidPressureTolerance = 30;
 
-        private const double outputFluidTemperatueUpperLimit = 18.22;
-        private const double outputFluidTemperatureLowerLimit = 1.67;
-        private const double outputFluidTemperatureTolerance = 5;
+        private const double outputFluidTemperatueUpperLimit = 19;
+        private const double outputFluidTemperatureLowerLimit = 1;
+        private const double outputFluidTemperatureTolerance = 2;
 
         private int mixValveUpperLimit = 100;
         private int mixValveLowerLimit = 0;
@@ -102,6 +102,7 @@ namespace Orbit.Models
 
         public void ProcessData()
         {
+            GenerateData();
             bool troubleFlag = false;
 
             // pump failure (loss of pump motor rotation, regardless of line pressure)
@@ -115,7 +116,7 @@ namespace Orbit.Models
                 // open the mixing valve and allow more 'cold' fluid in the mix
                 IncreaseFluidMix();
             }
-            if (OutputFluidTemperature < SetTemperature)
+            else if (OutputFluidTemperature < SetTemperature)
             {
                 // close the mixing valve to keep more 'hot' fluid in the mix
                 DecreaseFluidMix();
@@ -156,38 +157,45 @@ namespace Orbit.Models
 
             if (troubleFlag)
             {
-                Trouble();
+                Status = SystemStatus.Trouble;
             }
             else
             {
-                Normal();
+                Status = SystemStatus.On;
             }
         }
 
-        private void Trouble()
+        private void GenerateData()
         {
-            // change the system to a trouble status
-            Status = SystemStatus.Trouble;
-        }
+            Random rand = new Random();
 
-        private void Normal()
-        {
-            Status = SystemStatus.On;
+            LineAPressure = rand.Next(0, 600);
+            LineBPressure = rand.Next(100, 600);
+            OutputFluidTemperature = rand.Next(-600, 800) / 10.0;
+
+            if (rand.Next(0, 10) == 5)
+            {
+                PumpAOn = !PumpAOn;
+            }
+            if (rand.Next(0, 10) == 9)
+            {
+                PumpBOn = !PumpBOn;
+            }
         }
 
         private void IncreaseFluidMix()
         {
             // need formula: if valve opened 1 'degree', how much would temp change, use difference
             // in outflow and set temp to determine amount to change valve
-            
-            if(LineHeaterOn)
+
+            if (LineHeaterOn)
             {
                 // if heater is on, turn it off and recheck temp before moving valve position
                 LineHeaterOn = false;
             }
             else
             {
-                if(MixValvePosition < mixValveUpperLimit)
+                if (MixValvePosition < mixValveUpperLimit)
                 {
                     MixValvePosition++;
                 }
@@ -213,11 +221,11 @@ namespace Orbit.Models
         private void RotateRadiator()
         {
             // rotate radiator back and forth between range bounds
-            if(radiatorRotationIncreasing && (RadiatorRotation < radiatorRotationUpperLimit))
+            if (radiatorRotationIncreasing && (RadiatorRotation < radiatorRotationUpperLimit))
             {
                 RadiatorRotation++;
             }
-            else if(!radiatorRotationIncreasing && (RadiatorRotation > radiatorRotationLowerLimit))
+            else if (!radiatorRotationIncreasing && (RadiatorRotation > radiatorRotationLowerLimit))
             {
                 RadiatorRotation--;
             }
@@ -228,7 +236,7 @@ namespace Orbit.Models
             }
         }
 
-    #endregion Methods
+        #endregion Methods
 
         #region Alert Generation
 
@@ -258,7 +266,7 @@ namespace Orbit.Models
 
         private IEnumerable<Alert> CheckMixValvePosition()
         {
-            if(MixValvePosition >= mixValveUpperLimit)
+            if (MixValvePosition >= mixValveUpperLimit)
             {
                 yield return new Alert(nameof(MixValvePosition), "Mix valve position is at maximum", AlertLevel.HighError);
             }
@@ -270,7 +278,7 @@ namespace Orbit.Models
             {
                 yield return new Alert(nameof(MixValvePosition), "Mix valve position is at minimum", AlertLevel.LowError);
             }
-            else if(MixValvePosition <= (mixValveLowerLimit - mixValveTolerance))
+            else if (MixValvePosition <= (mixValveLowerLimit - mixValveTolerance))
             {
                 yield return new Alert(nameof(MixValvePosition), "Mix valve position is approaching minimum", AlertLevel.LowWarning);
             }
@@ -397,7 +405,7 @@ namespace Orbit.Models
                 .Concat(CheckRadiatorRotation())
                 .Concat(CheckLineAPressure())
                 .Concat(CheckLineBPressure())
-                .Concat(CheckOutputFluidTemp())                                                ;
+                .Concat(CheckOutputFluidTemp());
         }
 
         #endregion Alert generation
@@ -406,7 +414,7 @@ namespace Orbit.Models
 
         public bool Equals(ExternalCoolantLoopData other)
         {
-            if(ReferenceEquals(null, other))
+            if (ReferenceEquals(null, other))
                 return false;
             if (ReferenceEquals(this, other))
                 return true;
@@ -422,7 +430,7 @@ namespace Orbit.Models
                 && this.RadiatorDeployed == other.RadiatorDeployed
                 && this.OutputFluidTemperature == other.OutputFluidTemperature
                 && this.SetTemperature == other.SetTemperature;
-                }
+        }
 
         public override bool Equals(object obj)
         {
