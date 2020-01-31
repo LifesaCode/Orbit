@@ -39,6 +39,9 @@ namespace Orbit.Models
         private int seperatorSpeedLowerLimit = 1800;
         private int seperatorTolerance = 200;
 
+        private SystemStatus lastWorkingStatus;
+        private double tempControlIncrement = 0.5;
+
         #endregion Limits
 
         #region Public Properties
@@ -68,7 +71,7 @@ namespace Orbit.Models
         /// <summary>
         /// desired humidity level set by crew
         /// </summary>
-        public double SetHumidity { get; set; }
+        public double HumiditySetLevel { get; set; }
 
         /// <summary>
         /// motor speed of the air/liquid seperator in RPM
@@ -135,10 +138,63 @@ namespace Orbit.Models
 
         #endregion Public Properties
 
-        #region Public Methods
+        #region Constructors
+
+        public AtmosphereData() { }
+
+        public AtmosphereData(AtmosphereData other)
+        {
+            ReportDateTime = other.ReportDateTime;
+            CabinStatus = other.CabinStatus;
+            AmbientNoiseLevel = other.AmbientNoiseLevel;
+            HumidityLevel = other.HumidityLevel;
+            HumiditySetLevel = other.HumiditySetLevel;
+            Temperature = other.Temperature;
+            SetTemperatureDay = other.SetTemperatureDay;
+            SetTemperatureNight = other.SetTemperatureNight;
+            ReprocessBafflePosition = other.ReprocessBafflePosition;
+            FanSpeed = other.FanSpeed;
+            LiquidInOutflow = other.LiquidInOutflow;
+            Pressure = other.Pressure;
+            SetPressure = other.SetPressure;
+            SeperatorSpeed = other.SeperatorSpeed;
+            SeperatorFull = other.SeperatorFull;
+            TempControlBafflePosition = other.TempControlBafflePosition;
+        }
+
+        #endregion Constructors
+
+        #region Methods
 
         public void ProcessData()
         {
+            GenerateData();
+
+            // too hot or humid
+            if (Temperature > (SetTemperatureDay + tempControlIncrement)
+                || HumidityLevel > HumiditySetLevel) 
+            {
+                DecreaseTemperature();
+            }
+
+            // too cold or dry
+            if (CabinStatus == Modes.Crewed)
+            {
+                if(Temperature < (SetTemperatureDay - tempControlIncrement)
+                    || HumidityLevel < HumiditySetLevel) 
+                {
+                    IncreaseTemperature();
+                }
+            }
+            else if (CabinStatus == Modes.Uncrewed)
+            {
+                if(Temperature < (cabinTemperatureUncrewedLowerLimit - tempControlIncrement)
+                    || HumidityLevel < HumiditySetLevel)
+                {
+                    IncreaseTemperature();
+                }
+            }
+
             if (LiquidInOutflow)
             {
                 ReprocessBafflePosition = DiverterValvePositions.Reprocess;
@@ -147,44 +203,54 @@ namespace Orbit.Models
             {
                 ReprocessBafflePosition = DiverterValvePositions.Accept;
             }
+        }
 
-
-            // too hot
-            if (Temperature > (cabinTemperatureUpperLimit - cabinTemperatureTolerance)) 
+        private void DecreaseTemperature()
+        {
+            // open baffle to allow more air across cooling condensor
+            if (TempControlBafflePosition < 100)
             {
-                if (TempControlBafflePosition < 100)
-                {
-                    TempControlBafflePosition++;
-                }
-                else
-                    TempControlBafflePosition = 100;
+                TempControlBafflePosition++;
             }
-
-            // too cold
-            if (CabinStatus == Modes.Crewed)
+            else
             {
-                if(Temperature < (cabinTemperatureCrewedLowerLimit + cabinTemperatureTolerance)) 
-                {
-                    if (TempControlBafflePosition > 0)
-                    {
-                        TempControlBafflePosition--;
-                    }
-                    else TempControlBafflePosition = 0;
-                }
-            }
-            else if (CabinStatus == Modes.Uncrewed)
-            {
-                if(Temperature < (cabinTemperatureUncrewedLowerLimit + cabinTemperatureTolerance))
-                {
-                    if(TempControlBafflePosition > 0)
-                    {
-                        TempControlBafflePosition--;
-                    }
-                }
+                TempControlBafflePosition = 100;
             }
         }
 
-        #endregion Public Methods
+        private void IncreaseTemperature()
+        {
+            // close baffle to decrease air across cooling condensor
+            if (TempControlBafflePosition > 0)
+            {
+                TempControlBafflePosition--;
+            }
+            else
+            {
+                TempControlBafflePosition = 0;
+            }
+        }
+
+        private void GenerateData()
+        {
+            Random rand = new Random();
+            Temperature = rand.Next(150, 320) / 10.0;
+            HumidityLevel = rand.Next(10, 80);
+            Pressure = rand.Next(50, 110);
+            AmbientNoiseLevel = rand.Next(0, 72);
+            SeperatorSpeed = rand.Next(1000, 3000);
+
+            if(rand.Next(0, 100) % 7 == 0)
+            {
+                LiquidInOutflow = true;
+            }
+            else
+            {
+                LiquidInOutflow = false;
+            }
+        }
+
+        #endregion Methods
 
         #region Check Alerts
 
@@ -356,7 +422,7 @@ namespace Orbit.Models
                 && this.CabinStatus == other.CabinStatus
                 && this.AmbientNoiseLevel == other.AmbientNoiseLevel
                 && this.HumidityLevel == other.HumidityLevel
-                && this.SetHumidity == other.SetHumidity
+                && this.HumiditySetLevel == other.HumiditySetLevel
                 && this.Temperature == other.Temperature
                 && this.SetTemperatureDay == other.SetTemperatureDay
                 && this.SetTemperatureNight == other.SetTemperatureNight
@@ -382,7 +448,7 @@ namespace Orbit.Models
                 this.CabinStatus,
                 this.AmbientNoiseLevel,
                 this.HumidityLevel,
-                this.SetHumidity,
+                this.HumiditySetLevel,
                 this.Temperature,
                 this.SetTemperatureDay,
                 

@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Orbit.Models
 {
-    public class WaterGeneratorData : IAlertableModel
+    public class WaterGeneratorData : IAlertableModel, IEquatable<WaterGeneratorData>
     {
         #region Limits
 
@@ -93,6 +93,27 @@ namespace Orbit.Models
         public int Co2StoreLevel { get; set; }
 
         #endregion Public Properties
+
+        #region Constructors
+
+        public WaterGeneratorData() { }
+
+        public WaterGeneratorData(WaterGeneratorData other)
+        {
+            Status = other.Status;
+            SeperatorOn = other.SeperatorOn;
+            SeperatorMotorSpeed = other.SeperatorMotorSpeed;
+            SeperatorMotorSetSpeed = other.SeperatorMotorSetSpeed;
+            HeaterOn = other.HeaterOn;
+            ReactorTemp = other.ReactorTemp;
+            ReactorSetTemp = other.ReactorSetTemp;
+            PumpOn = other.PumpOn;
+            MethaneStoreLevel = other.MethaneStoreLevel;
+            H2StoreLevel = other.H2StoreLevel;
+            Co2StoreLevel = other.Co2StoreLevel;
+        }
+
+        #endregion Constructors
 
         #region Methods
 

@@ -41,7 +41,7 @@ namespace Orbit.Models
         /// <summary>
         /// Indicator of overall system status (Ready, Processing, Failure...)
         /// </summary>
-        public SystemStatus SystemStatus { get; set; }
+        public SystemStatus Status { get; set; }
 
         /// <summary>
         /// Fullness of treated urine holding tank as a percentage
@@ -86,16 +86,14 @@ namespace Orbit.Models
 
         #endregion Properties
 
-        #region Constructor
+        #region Constructors
 
-        public UrineSystemData()
-        {
+        public UrineSystemData() { }
 
-        }
         public UrineSystemData (UrineSystemData other)
         {
             ReportDateTime = DateTimeOffset.Now;
-            SystemStatus = other.SystemStatus;
+            Status = other.Status;
             UrineTankLevel = other.UrineTankLevel;
             SupplyPumpOn = other.SupplyPumpOn;
             DistillerOn = other.DistillerOn;
@@ -106,28 +104,30 @@ namespace Orbit.Models
 
         }
 
-        #endregion Constructor
+        #endregion Constructors
+
+        #region Methods
 
         public void ProcessData(double wasteTankLevel)
         {
             GenerateData();
 
-            if (SystemStatus == SystemStatus.Standby)
+            if (Status == SystemStatus.Standby)
             {
                 // if urine tank is full and the waste and brine tanks are not, change to 'processing' state
                 if (UrineTankLevel >= urineTankUpperLimit * .8
                     && wasteTankLevel < urineTankUpperLimit
                     && BrineTankLevel < brineTankLevelUpperLimit)
                 {
-                    SystemStatus = SystemStatus.Processing;
+                    Status = SystemStatus.Processing;
                 }
                 // if urine tank not full, stay in standby and simulate urine tank filling
                 else
                 {
                     if (SupplyPumpOn || PurgePumpOn || DistillerOn)
                     {
-                        lastWorkingStatus = SystemStatus;
-                        SystemStatus = SystemStatus.Trouble;
+                        lastWorkingStatus = Status;
+                        Status = SystemStatus.Trouble;
                     }
                     else
                     {
@@ -135,14 +135,14 @@ namespace Orbit.Models
                     }
                 }
             }
-            else if (SystemStatus == SystemStatus.Processing)
+            else if (Status == SystemStatus.Processing)
             {
                 // no more urine to process or waste or brine tank full, change to 'Standby' state
                 if (UrineTankLevel <= 0
                     || wasteTankLevel >= urineTankUpperLimit
                     || BrineTankLevel >= brineTankLevelUpperLimit)
                 {
-                    SystemStatus = SystemStatus.Standby;
+                    Status = SystemStatus.Standby;
 
                     UrineTankLevel = Math.Max(UrineTankLevel, 0);
                     BrineTankLevel = Math.Min(BrineTankLevel, brineTankLevelUpperLimit);
@@ -151,8 +151,8 @@ namespace Orbit.Models
                 {
                     if(!SupplyPumpOn || !PurgePumpOn || !DistillerOn)
                     {
-                        lastWorkingStatus = SystemStatus;
-                        SystemStatus = SystemStatus.Trouble;
+                        lastWorkingStatus = Status;
+                        Status = SystemStatus.Trouble;
                     }
                     else
                     {
@@ -160,13 +160,13 @@ namespace Orbit.Models
                     }
                 }
             }
-            else if(SystemStatus == SystemStatus.Trouble)
+            else if(Status == SystemStatus.Trouble)
             {
                 Trouble();
             }
             else
             {
-                SystemStatus = SystemStatus.Standby;
+                Status = SystemStatus.Standby;
                 SimulateStandby();
             }
         }
@@ -208,7 +208,7 @@ namespace Orbit.Models
         {
             Random rand = new Random();
 
-           if(SystemStatus == SystemStatus.Processing)
+           if(Status == SystemStatus.Processing)
             {
                 DistillerTemp = rand.Next(distillerTempLowerLimit, distillerTempUpperLimit);
                 DistillerSpeed = rand.Next(distillerSpeedLowerLimit, distillerSpeedUpperLimit);
@@ -241,6 +241,8 @@ namespace Orbit.Models
             }
             else { return true; }
         }
+
+        #endregion Methods
 
         #region Alert Generation
 
@@ -355,7 +357,7 @@ namespace Orbit.Models
                 return true;
 
             return this.ReportDateTime.Equals(other.ReportDateTime)
-                   && this.SystemStatus == other.SystemStatus
+                   && this.Status == other.Status
                    && this.UrineTankLevel.Equals(other.UrineTankLevel)
                    && this.SupplyPumpOn == other.SupplyPumpOn
                    && this.DistillerOn == other.DistillerOn
@@ -390,7 +392,7 @@ namespace Orbit.Models
         {
             return HashCode.Combine(
                 this.ReportDateTime,
-                this.SystemStatus,
+                this.Status,
                 this.UrineTankLevel,
                 this.SupplyPumpOn,
                 this.DistillerOn,

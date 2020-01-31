@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Orbit.Models
 {
-    public class OxygenGenerator : IAlertableModel
+    public class OxygenGenerator : IAlertableModel, IEquatable<OxygenGenerator>
     {
         #region Limits
         // these should not be constant so crew can make changes in orbit

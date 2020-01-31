@@ -31,12 +31,12 @@ namespace Orbit.Desktop.Components
 
         private void Instance_AlertReported(object? sender, AlertEventArgs e)
         {
-            if (e.Alert.PropertyName == nameof(UrineSystemData.SystemStatus) || e.Alert.PropertyName == nameof(UrineSystemData.UrineTankLevel))
+            if (e.Alert.PropertyName == nameof(UrineSystemData.Status) || e.Alert.PropertyName == nameof(UrineSystemData.UrineTankLevel))
             {
                 // Handle level alert
                 if (e.Report is UrineSystemData data)
                 {
-                    Logger.Info("Alert reported: {data}", new { data.SystemStatus, e.Alert.Message });
+                    Logger.Info("Alert reported: {data}", new { data.Status, e.Alert.Message });
                     if (this.UrineSystemStatusAlert == null)
                     {
                         this.UrineSystemStatusAlert = new AlertViewModel(data, e.Alert);

@@ -46,7 +46,7 @@ namespace Orbit.Data
                 DistillerOn = false,
                 SupplyPumpOn = false,
                 PurgePumpOn = false,
-                SystemStatus = SystemStatus.Standby,
+                Status = SystemStatus.Standby,
                 UrineTankLevel = 40,
             });
 

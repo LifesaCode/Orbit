@@ -17,7 +17,7 @@ namespace Orbit.Models
     /// simplicity, this class is based on using the zeolite system.
     /// </summary>
    
-    public class CarbonDioxideRemediation : IAlertableModel
+    public class CarbonDioxideRemediation : IAlertableModel, IEquatable<CarbonDioxideRemediation>
     {
         #region Limits
 
@@ -81,6 +81,24 @@ namespace Orbit.Models
         public double Co2Level { get; set; }
 
         #endregion Public Properties
+
+        #region Constructors
+
+        public CarbonDioxideRemediation() { }
+
+        public CarbonDioxideRemediation(CarbonDioxideRemediation other)
+        {
+            Status = other.Status;
+            FanOn = other.FanOn;
+            BedSelectorValve = other.BedSelectorValve;
+            AbsorbingBed = other.AbsorbingBed;
+            RegeneratingBed = other.RegeneratingBed;
+            Bed1Temperature = other.Bed1Temperature;
+            Bed2Temperature = other.Bed2Temperature;
+            Co2Level = other.Co2Level;
+        }
+
+    #endregion Constructors
 
         #region Public Methods
 

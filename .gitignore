@@ -340,3 +340,6 @@ ASALocalRun/
 healthchecksdb
 /src/Orbit/Models/StatusValue.cs
 /src/Orbit/Models/DiverterValvePositions.cs
+*.dll
+
+src/Orbit.Unity/Assets/Dependencies/

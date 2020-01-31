@@ -2,9 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <DefineConstants Condition="'$(TargetFramework)' == 'netstandard2.1'">NETSTANDARD_21;$(DefineConstants)</DefineConstants>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
+
+  <ItemGroup>
+    <MySourceFiles Include="$(OutputPath)\**\*.dll" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.0" />
@@ -28,4 +32,7 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <Target Name="CopyFiles" AfterTargets="PostBuildEvent">
+    <Copy SourceFiles="@(MySourceFiles)" DestinationFolder="..\Orbit.Unity\Assets\Dependencies"/>
+  </Target>
 </Project>

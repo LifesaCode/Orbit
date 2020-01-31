@@ -1,4 +1,4 @@
-﻿using System;
+﻿ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -117,7 +117,7 @@ namespace Orbit.Models
             SolarDeployed = other.SolarDeployed;
             BatteryVoltage = other.BatteryVoltage;
             BatteryChargeLevel = other.BatteryChargeLevel;
-
+            
             // for creating rudimentory sun/eclipse cycles
             inEclipse = other.inEclipse;
             eclipseCount = other.eclipseCount;
@@ -162,7 +162,7 @@ namespace Orbit.Models
             Random rand = new Random();
 
             // toggle between 'day' and 'night' cycles when solar panels will and will not be generating power
-            if (eclipseCount >= eclipseLength)
+            if(eclipseCount >= eclipseLength)
             {
                 inEclipse = !inEclipse;
                 eclipseCount = 0;
@@ -178,7 +178,7 @@ namespace Orbit.Models
                 SolarArrayVoltage = 0;
             }
             // simulatse station behind Earth or Moon, so no sunlight on solar panels
-            else if (inEclipse)
+            else  if(inEclipse)
             {
                 SolarArrayVoltage = rand.Next(minOutputToCharge, solarVoltageUpperLimit);
             }
@@ -194,14 +194,14 @@ namespace Orbit.Models
         }
         private void SimulateDrain()
         {
-            if (BatteryChargeLevel <= batteryChargeLevelLowerLimit
+            if(BatteryChargeLevel <= batteryChargeLevelLowerLimit
                 || (BatteryVoltage < batteryVoltageLowerLimit)
                 || (BatteryVoltage > batteryVoltageUpperLimit))
             {
                 Trouble();
             }
 
-            if (BatteryChargeLevel > 0)
+            if(BatteryChargeLevel > 0)
             {
                 BatteryChargeLevel--;
             }
@@ -213,13 +213,13 @@ namespace Orbit.Models
 
         private void SimulateCharge()
         {
-            if ((SolarArrayVoltage > solarVoltageUpperLimit)
+            if((SolarArrayVoltage > solarVoltageUpperLimit)
                 || (SolarArrayVoltage < minOutputToCharge))
             {
                 Trouble();
             }
 
-            if (BatteryChargeLevel < batteryChargeLevelUpperLimit)
+            if(BatteryChargeLevel < batteryChargeLevelUpperLimit)
             {
                 BatteryChargeLevel++;
             }
@@ -258,11 +258,11 @@ namespace Orbit.Models
 
         private IEnumerable<Alert> CheckSolarVoltage()
         {
-            if (SolarArrayVoltage > solarVoltageUpperLimit)
+            if(SolarArrayVoltage > solarVoltageUpperLimit)
             {
                 yield return new Alert(nameof(SolarArrayVoltage), "Voltage is above limit", AlertLevel.HighError);
             }
-            else if (SolarArrayVoltage >= (solarVoltageUpperLimit - solarVoltageTolerance))
+            else if(SolarArrayVoltage >= (solarVoltageUpperLimit - solarVoltageTolerance))
             {
                 yield return new Alert(nameof(SolarArrayVoltage), "Voltage output is elevated", AlertLevel.HighWarning);
             }
@@ -274,11 +274,11 @@ namespace Orbit.Models
 
         private IEnumerable<Alert> CheckSolarRotation()
         {
-            if (SolarArrayRotation > solarRotationUpperLimit)
+            if(SolarArrayRotation > solarRotationUpperLimit)
             {
                 yield return new Alert(nameof(SolarArrayRotation), "Solar array has exceeded maximum rotation", AlertLevel.HighError);
             }
-            else if (SolarArrayRotation >= (solarRotationUpperLimit - solarRotationTolerance))
+            else if(SolarArrayRotation >= (solarRotationUpperLimit - solarRotationTolerance))
             {
                 yield return new Alert(nameof(SolarArrayRotation), "Solar array rotation is at maximum", AlertLevel.HighWarning);
             }
@@ -298,11 +298,11 @@ namespace Orbit.Models
 
         private IEnumerable<Alert> CheckBatteryChargeLevel()
         {
-            if (BatteryChargeLevel > batteryChargeLevelUpperLimit)
+            if(BatteryChargeLevel > batteryChargeLevelUpperLimit)
             {
                 yield return new Alert(nameof(BatteryChargeLevel), "Battery charge has exceeded maximum", AlertLevel.HighError);
             }
-            else if (BatteryChargeLevel <= (batteryChargeLevelLowerLimit + batteryChargeLevelTolerance))
+            else if(BatteryChargeLevel <= (batteryChargeLevelLowerLimit + batteryChargeLevelTolerance))
             {
                 yield return new Alert(nameof(BatteryChargeLevel), "Battery charge is approaching minimum", AlertLevel.LowWarning);
             }
@@ -318,19 +318,19 @@ namespace Orbit.Models
 
         private IEnumerable<Alert> CheckBatteryVoltage()
         {
-            if (BatteryVoltage > batteryVoltageUpperLimit)
+            if(BatteryVoltage > batteryVoltageUpperLimit)
             {
                 yield return new Alert(nameof(BatteryVoltage), "Battery voltage has exceeded maximum", AlertLevel.HighError);
             }
-            else if (BatteryVoltage >= (batteryVoltageUpperLimit - batteryVoltageTolerance))
+            else if(BatteryVoltage >= (batteryVoltageUpperLimit - batteryVoltageTolerance))
             {
                 yield return new Alert(nameof(BatteryVoltage), "Battery voltage is high", AlertLevel.HighWarning);
             }
-            else if (BatteryVoltage < batteryVoltageLowerLimit)
+            else if(BatteryVoltage < batteryVoltageLowerLimit)
             {
                 yield return new Alert(nameof(BatteryVoltage), "Battery voltage is below minimum", AlertLevel.LowError);
             }
-            else if (BatteryVoltage <= (batteryVoltageLowerLimit - batteryVoltageTolerance))
+            else if(BatteryVoltage <= (batteryVoltageLowerLimit - batteryVoltageTolerance))
             {
                 yield return new Alert(nameof(BatteryVoltage), "Battery voltage is low", AlertLevel.LowWarning);
             }
@@ -342,7 +342,7 @@ namespace Orbit.Models
 
         private IEnumerable<Alert> CheckBatteryTemp()
         {
-            if (BatteryTemperature > batteryVoltageUpperLimit)
+            if(BatteryTemperature > batteryVoltageUpperLimit)
             {
                 yield return new Alert(nameof(BatteryTemperature), "Battery temperature is above maximum", AlertLevel.HighError);
             }
@@ -354,7 +354,7 @@ namespace Orbit.Models
             {
                 yield return new Alert(nameof(BatteryTemperature), "Battery temperature is below minumum", AlertLevel.LowError);
             }
-            else if (BatteryTemperature <= (batteryTemperatureLowerLimit - batteryTemperatureTolerance))
+            else if(BatteryTemperature <= (batteryTemperatureLowerLimit - batteryTemperatureTolerance))
             {
                 yield return new Alert(nameof(BatteryTemperature), "Battery temperature is low", AlertLevel.LowWarning);
             }
@@ -403,14 +403,14 @@ namespace Orbit.Models
         public override int GetHashCode()
         {
             return HashCode.Combine(
-                this.ReportDateTime,
+                this.ReportDateTime, 
                 this.Status,
                 this.ShuntStatus,
                 this.SolarArrayRotation,
                 this.SolarRotationIncreasing,
                 this.SolarArrayVoltage,
                 this.SolarDeployed,
-
+                
                 (this.BatteryTemperature, this.BatteryChargeLevel, this.BatteryVoltage)
                 );
         }

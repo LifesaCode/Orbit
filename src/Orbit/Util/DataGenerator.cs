@@ -20,7 +20,7 @@ namespace Orbit.Util
             AppDomain.CurrentDomain.ProcessExit += (s, e) => this._cancellationTokenSource.Cancel();
         }
 
-        private Task? _eventThread;
+        private Thread? _eventThread;
 
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
@@ -30,7 +30,8 @@ namespace Orbit.Util
         {
             if (_eventThread == null)
             {
-                _eventThread = Task.Run(SimulateDataGeneration, _cancellationTokenSource.Token);
+                _eventThread = new Thread(SimulateDataGeneration);
+                _eventThread.Start();
             }
         }
 
@@ -50,14 +51,15 @@ namespace Orbit.Util
         /// This method simulates generating real-world data and inserting it into the database.
         /// </summary>
         /// <returns> </returns>
-        private async Task SimulateDataGeneration()
+        private void SimulateDataGeneration()
         {
             CancellationToken token = _cancellationTokenSource.Token;
-            var rand = new Random();
+
             this.Started?.Invoke(this, EventArgs.Empty);
-            while (true)
+            bool isFirst = true;
+            while (!token.IsCancellationRequested)
             {
-                await Task.Delay(TimeSpan.FromSeconds(3), token).ConfigureAwait(true);
+                Thread.Sleep(TimeSpan.FromSeconds(3));
 
                 if (token.IsCancellationRequested)
                 {
@@ -67,12 +69,20 @@ namespace Orbit.Util
                 using var scope = ServiceProvider.CreateScope();
                 using var db = scope.ServiceProvider.GetRequiredService<OrbitDbContext>();
 
-                WasteWaterStorageTankData wasteTank = db.WasteWaterStorageTankData.First();
-                UrineSystemData urineSystem = db.UrineProcessorData.First();
-                WaterProcessorData waterProcessor = db.WaterProcessorData.First();
+                if (isFirst)
+                {
+                    db.InsertSeedData();
+                    isFirst = false;
+                    db.SaveChanges();
+                    continue;
+                }
+
+                WasteWaterStorageTankData wasteTank = db.WasteWaterStorageTankData.Last();
+                UrineSystemData urineSystem = db.UrineProcessorData.Last();
+                WaterProcessorData waterProcessor = db.WaterProcessorData.Last();
 
                 urineSystem.ProcessData(wasteTank.Level);
-                wasteTank.ProcessData(urineSystem.SystemStatus, waterProcessor.SystemStatus);
+                wasteTank.ProcessData(urineSystem.Status, waterProcessor.SystemStatus);
                 waterProcessor.ProcessData(wasteTank.Level);
 
                 var nextUrineSystem = new UrineSystemData(urineSystem);
@@ -86,11 +96,10 @@ namespace Orbit.Util
                 db.UrineProcessorData.Add(nextUrineSystem);
                 db.WasteWaterStorageTankData.Add(nextWasteTank);
                 db.WaterProcessorData.Add(nextWaterProcessor);
-                await db.SaveChangesAsync(token);
+                db.SaveChanges();
             }
 
             this.Stopped?.Invoke(this, EventArgs.Empty);
         }
-
     }
 }

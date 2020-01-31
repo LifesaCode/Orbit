@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Orbit.Models
 {
-    public class ExternalCoolantLoopData : IAlertableModel
+    public class ExternalCoolantLoopData : IAlertableModel, IEquatable<ExternalCoolantLoopData>
     {
         #region Limits
 
@@ -97,6 +97,27 @@ namespace Orbit.Models
         public double SetTemperature { get; set; }
 
         #endregion Public Properties
+
+        #region Constructors
+
+        public ExternalCoolantLoopData() { }
+
+        public ExternalCoolantLoopData(ExternalCoolantLoopData other)
+        {
+            Status = other.Status;
+            RadiatorRotation = other.RadiatorRotation;
+            PumpAOn = other.PumpAOn;
+            PumpBOn = other.PumpBOn;
+            MixValvePosition = other.MixValvePosition;
+            LineAPressure = other.LineAPressure;
+            LineBPressure = other.LineBPressure;
+            LineHeaterOn = other.LineHeaterOn;
+            RadiatorDeployed = other.RadiatorDeployed;
+            OutputFluidTemperature = other.OutputFluidTemperature;
+            SetTemperature = other.SetTemperature;
+        }
+
+        #endregion Constructors
 
         #region Methods
 
